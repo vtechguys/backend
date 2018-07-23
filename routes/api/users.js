@@ -4,6 +4,8 @@ const router = express.Router();
 
 //Lodash Imports Utils
 const _ = require('lodash');
+// bcrypt for hashing password
+const bcrypt = require('bcryptjs');
 // Mongoose
 
 
@@ -55,9 +57,20 @@ router.post('/signup',(req,res)=>{
             }
 
             let newUser = new User(body);
-            newUser.save().then(()=>{
-                console.log(`User Saving SignUp Sucesss`);
-            });
+            bcrypt.genSalt(60,(errors,salt)=>{
+                //salt gen for 60 rounds
+                bcrypt.hash(newUser.passwword, salt, (err, hash)=>{
+                    //hashing paswword with salt
+                    newUser.passwword = hash;
+                    //hashed password 
+                    //Saving user with hashed password
+                    newUser.save().then(()=>{
+                        console.log(`User Saving SignUp Sucesss`);
+                    });
+                })
+            })
+
+            
 
             res.json({status:'SignUp was Successfull'});
 
