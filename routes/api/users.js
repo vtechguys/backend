@@ -6,13 +6,17 @@ const router = express.Router();
 const _ = require('lodash');
 // bcrypt for hashing password
 const bcrypt = require('bcryptjs');
+// jwt tokens to user
+const jwt = require('jsonwebtoken');
+const keys = require('../../config/keys');
 // Mongoose
 
 
 
 
 //Validaotors
-const singUpInput = require('../../validations/signupInput');
+const singUpInputsValidate = require('../../validations/signupInputs');
+const loginInputsValidate = require('../../validations/loginInputs');
 
 
 //User Model
@@ -37,13 +41,13 @@ router.get('/test',(req,res)=>{
 // @access  Public
 router.post('/signup',(req,res)=>{
     let body = _.pick(req.body,["name","email","password","confirmPassword","dob"]);
-    const { errors, isValid } = singUpInput(body);
+    const { errors, isValid } = singUpInputsValidate(body);
 
     //check if form Inputs were valid if isValid==true valid form inputs => No erros occured erros isEmpty == true
     if(!isValid){
         //run if not valid form submition
         console.log("Invalid login Inputs ",errors);
-        res.json(errors);
+        res.status(400).json(errors);
     }
     else
     {
@@ -53,32 +57,33 @@ router.post('/signup',(req,res)=>{
             
             if(!response.status && response.user !== null){
                 console.log(`User was Found for Email ${body.email} SignUp is not possible`);
-                res.json({status: `User with Email ${body.email} already exist`});
+                res.status(404).json({status: `User with Email ${body.email} already exist`});
             }
 
             let newUser = new User(body);
-            bcrypt.genSalt(60,(errors,salt)=>{
-                //salt gen for 60 rounds
-                bcrypt.hash(newUser.passwword, salt, (err, hash)=>{
-                    //hashing paswword with salt
-                    newUser.passwword = hash;
-                    //hashed password 
-                    //Saving user with hashed password
-                    newUser.save().then(()=>{
-                        console.log(`User Saving SignUp Sucesss`);
-                    });
-                })
-            })
+           
+            newUser.save().then(()=>{
+                console.log(`User Saving SignUp Sucesss`);
+                res.json({status:'SignUp was Successfull'});
 
+            });
             
 
-            res.json({status:'SignUp was Successfull'});
+            
 
 
 
         }).catch(error=>{
             console.log(`User was Found for Email ${body.email} SignUp is not possible`);
-            res.json({status: `User with Email ${body.email} already exist`,error: error});
+            res.status(400).json(
+                {
+                    status: false,
+                    errors: {
+                        ...error,
+                        userAlreadyExist: `User with email ${body.email} already exist`
+                    }
+                }
+            );
         });
     }
 
@@ -90,7 +95,44 @@ router.post('/signup',(req,res)=>{
 // @access  Public
 router.post('/login',(req,res)=>{
     let body = _.pick(req.body,["name","email","password","confirmPassword","dob"]);
-    res.json(body);
+    const { errors, isValid } = loginInputsValidate(body);
+    //check if loginInputs were valid
+    if(!isValid){
+        //when inputs not valid
+        res.status(400).json(errors);
+    }
+    else{
+        //valid inputs
+
+        User.findByCredentials(body.email,body.password)
+            .then(user=>{
+                if(!user){
+                    console.log('No user found SignUp please',user);
+                    errors.noUserFound = `Error no user found for that Email ${email}`;
+                    res.status(404).json({errors});
+                }
+                const payload = { 
+                    id: user.id, 
+                    name: user.name 
+                }; // Creating JWT Payload
+
+                // Sign Token
+                jwt.sign(payload,keys.secretOrKey,{ expiresIn: 3600 },(err,token)=>{
+                    console.log('inside jwt',user);
+                    res.json({ token:token });
+                })
+                
+            })
+            .catch(err=>{
+                console.log("Error in login ",err);
+               
+                res.status(400).json(err);
+            });
+
+
+
+
+    }
 });
 
 
