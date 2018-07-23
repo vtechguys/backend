@@ -2,8 +2,9 @@
 const express = require('express');
 const router = express.Router();
 
-//Lodash Imports Utils
-const _ = require('lodash');
+//pick utils Imports 
+const pick = require('../../utils/pick');
+
 //Passport 
 const passport = require('passport');
 
@@ -42,7 +43,7 @@ router.get('/test',(req,res)=>{
 // @desc    signup users route
 // @access  Public
 router.post('/signup',(req,res)=>{
-    let body = _.pick(req.body,["name","email","password","confirmPassword","dob"]);
+    let body = pick(req.body,["name","email","password","confirmPassword","dob"]);
     const { errors, isValid } = singUpInputsValidate(body);
 
     //check if form Inputs were valid if isValid==true valid form inputs => No erros occured erros isEmpty == true
@@ -96,7 +97,7 @@ router.post('/signup',(req,res)=>{
 // @desc    login users route
 // @access  Public
 router.post('/login',(req,res)=>{
-    let body = _.pick(req.body,["name","email","password","confirmPassword","dob"]);
+    let body = pick(req.body,["name","email","password","confirmPassword","dob"]);
     const { errors, isValid } = loginInputsValidate(body);
     //check if loginInputs were valid
     if(!isValid){
