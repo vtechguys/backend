@@ -7,7 +7,8 @@ function loginInputsValidate (input){
     console.log("loginInputs recived ",input);
 
     if(isEmpty(input)){
-       errors.email = 'Email is required',
+        errors.blankForm = 'Blank Form Not Allowed';
+       errors.email = 'Email is required';
        errors.password = 'Password is required' 
     }
     else{
