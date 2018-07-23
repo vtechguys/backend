@@ -4,8 +4,10 @@ const router = express.Router();
 
 //Lodash Imports Utils
 const _ = require('lodash');
-// bcrypt for hashing password
-const bcrypt = require('bcryptjs');
+//Passport 
+const passport = require('passport');
+
+
 // jwt tokens to user
 const jwt = require('jsonwebtoken');
 const keys = require('../../config/keys');
@@ -119,7 +121,7 @@ router.post('/login',(req,res)=>{
                 // Sign Token
                 jwt.sign(payload,keys.secretOrKey,{ expiresIn: 3600 },(err,token)=>{
                     console.log('inside jwt',user);
-                    res.json({ token:token });
+                    res.json({ success:true,token:'Bearer '+token });
                 })
                 
             })
@@ -135,7 +137,17 @@ router.post('/login',(req,res)=>{
     }
 });
 
+// @route   GET api/users/current
+// @desc    Current user route.Get Name emailId and avatar.
+// @access  Private
 
+router.get('/current',passport.authenticate('jwt',{ session: false }),(req,res)=>{
+    res.json({
+        email:req.user.email,
+        name:req.user.name
+    });
+
+})
 
 
 module.exports = router;
