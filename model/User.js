@@ -10,17 +10,14 @@ const bcrypt = require('bcryptjs');
 
 const keys = require('../config/keys');
 
-const nameSchema = new Schema({
-    first:{
-        type:String
-    },
-    last:{
-        type:String
-    }
-});
+
 const UserSchema = new Schema({
-    name:{
-        type:nameSchema,
+    firstName:{
+        type:String,
+        required:true
+    },
+    lastName:{
+        type:String,
         required:true
     },
     email:{
