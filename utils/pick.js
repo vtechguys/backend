@@ -6,7 +6,10 @@ function pick(object,props){
     props.forEach(prop=>{
 		if(object[prop]!==undefined)
         	newObject[prop] = object[prop];
-		
+        else
+            newObject[prop] = '';
+
+        
     });
 
     return newObject;

@@ -10,13 +10,11 @@ const Profile = require('../../model/Profile');
 const profileInputsValidate = require('../../validations/profileInputs');
 const educationInputsValidate = require('../../validations/educationInputs');
 const experienceInputsValidate = require('../../validations/experienceInputs');
-
+const voteInputsValidate = require('../../validations/voteInputs');
 
 
 
 const pick = require('../../utils/pick');
-
-
 
 //passport imports
 const passport = require('passport');
@@ -29,6 +27,7 @@ const passport = require('passport');
 router.get('/test',(req,res)=>{
     res.json({success:true, msg: "Working Profile"})
 });
+
 
 // @route   GET api/profile/
 // @desc    GET User Profile 
@@ -276,5 +275,79 @@ router.delete(
       }).catch(err=>res.json({errors:{...err,...errors}}))
     }
 );
+// @route   DELETE api/profile/all
+// @desc    DELETE PROFILE AND USER
+// @access  Private
+
+router.delete('/all',passport.authenticate('jwt',{ session: false }),(req,res)=>{
+    Profile.findOneAndRemove({user: req.user.id }).then(()=>{
+        User.findOneAndRemove({user: req.user.id }).then(()=>{
+            res.json({success: true});
+        })
+    }).catch(err=>res.json({errors:{...err}}))
+});
+
+
+
+router.post('/vote/:user_id',passport.authenticate('jwt',{ session: false }),(req,res)=>{
+    let vote = pick(req.body,["vote"]);
+    console.log("vote is ",vote)
+    const { errors, isValid } = voteInputsValidate(vote);
+    //upvote +1 true
+    //novote default false 
+    //downvote -1 false
+    if(!isValid){
+        console.log("Not valid vote ",errors);
+        res.status(400).json(errors);
+    }
+    else{
+                //voter must send Id of user whoes profile is to be liked
+        //voter id is avialablethrough passport
+        console.log("voting for ",req.params.user_id," by ",req.user.id);
+        Profile.findOne({ user: req.params.user_id }).then(profile=>{
+            if(!profile){
+                console.log("Trying to vote for non existing user");
+                res.status(404).json({status:false,noMatchingProfile:'no matching profile found'});
+            }
+            else{
+                console.log("Voting for this profile ",profile);
+                
+                //check if voter already voted...
+                console.log(typeof req.params.user_id);
+                console.log(profile.votedBy.map(userVote =>{console.log(typeof userVote.user.toString(),userVote.user.toString());return userVote.user.toString()}));
+                let voterIndex = profile.votedBy.map(userVote => userVote.user.toString())
+                                    .indexOf(req.params.user_id);
+                console.log(voterIndex);
+                if(voterIndex>=0){
+                    //voter already exist
+                    let updateVote = {
+                        user: req.user.id,//voter who req upvote
+                        vote:vote.vote
+                    };
+                    profile.votedBy[voterIndex] = updateVote;
+                    profile.save().then(()=>{
+                        res.json({vote:`${vote?'Liked':'Disliked'}`,voteChanged:true})
+                    })
+                }
+                else{
+                    //new vote on profile
+                    console.log("Vote type is",typeof vote);
+                    let newVote = {
+                        user: req.user.id,//voter who req upvote
+                        vote:vote.vote
+                    };
+                    profile.votedBy.unshift(newVote);
+                    profile.save().then(()=>{
+                        res.json({vote:`${vote?'Liked':'Disliked'}`,newVoted:true})
+                    })
+                }
+
+
+
+            }
+        })
+    }
+    
+});
 
 module.exports = router;

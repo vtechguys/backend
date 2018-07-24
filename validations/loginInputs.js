@@ -6,12 +6,8 @@ function loginInputsValidate (input){
     const errors = {};
     console.log("loginInputs recived ",input);
 
-    if(isEmpty(input)){
-        errors.blankForm = 'Blank Form Not Allowed';
-       errors.email = 'Email is required';
-       errors.password = 'Password is required' 
-    }
-    else{
+    
+    
         input.email ? !isEmpty(input.email) : '';
         input.password ? !isEmpty(input.password) :'';
 
@@ -19,15 +15,16 @@ function loginInputsValidate (input){
             if(!Validator.isEmail(input.email)){
                 error.email = 'Email is Invalid';
             }
-            if(isEmpty(input.email)){
+            if(Validator.isEmpty(input.email)){
                 error.email = 'Email is required'
             }
         //Password validate
-            if(isEmpty(input.password)){
-                errors.password = 'Password is valid';
+        console.log(input.password);
+            if(Validator.isEmpty(input.password)){
+                errors.password = 'Password is invalid';
             }
 
-    }
+   
     
     return {
         errors:errors,

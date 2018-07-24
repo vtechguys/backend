@@ -43,7 +43,7 @@ router.get('/test',(req,res)=>{
 // @desc    signup users route
 // @access  Public
 router.post('/signup',(req,res)=>{
-    let body = pick(req.body,["name","email","password","confirmPassword","dob"]);
+    let body = pick(req.body,["firstName","lastName","email","password","confirmPassword","dob"]);
     const { errors, isValid } = singUpInputsValidate(body);
 
     //check if form Inputs were valid if isValid==true valid form inputs => No erros occured erros isEmpty == true
@@ -149,6 +149,11 @@ router.get('/current',passport.authenticate('jwt',{ session: false }),(req,res)=
     });
 
 })
+
+
+
+
+
 
 
 module.exports = router;

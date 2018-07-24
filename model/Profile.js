@@ -46,11 +46,11 @@ const ProfileSchema = new Schema({
         }
     },
     votedBy:[{
-        voter:{
+        user:{
             type: Schema.Types.ObjectId,
             required:true
         },
-        voteType:{
+        vote:{
             type:Boolean,
             default:false,
             required:true
