@@ -311,10 +311,13 @@ router.post('/vote/:user_id',passport.authenticate('jwt',{ session: false }),(re
             }
             else{
                 console.log("Voting for this profile ",profile);
+                let array = profile.votedBy.map(oneVote => oneVote.user.toString());
+                console.log("Array",typeof array," ",array);
                 
+
                 //check if voter already voted...
-                console.log(typeof req.params.user_id);
-                console.log(profile.votedBy.map(userVote =>{console.log(typeof userVote.user.toString(),userVote.user.toString());return userVote.user.toString()}));
+                // console.log(typeof req.params.user_id);
+                // console.log(profile.votedBy.map(userVote =>{console.log(typeof userVote.user.toString(),userVote.user.toString());return userVote.user.toString()}));
                 let voterIndex = profile.votedBy.map(userVote => userVote.user.toString())
                                     .indexOf(req.params.user_id);
                 console.log(voterIndex);
