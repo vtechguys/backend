@@ -9,6 +9,9 @@ const pick = require('../../utils/pick');
 const Post = require('../../model/Post');
 
 
+//validate
+const voteInputsValidate = require('../../validations/voteInputs');
+const commentInputsValidate = require('../../validations/commentInputs');
 //Post Inputs Validate
 const postInputsValidate = require('../../validations/postInputs');
 
@@ -23,6 +26,7 @@ const postInputsValidate = require('../../validations/postInputs');
 router.get('/test',(req,res)=>{
     res.json({success:true,msg:"Working Users"})
 });
+
 
 // @route   GET api/posts/
 // @desc    GET Posts route
@@ -121,6 +125,78 @@ router.get('/:post_id',(req,res)=>{
 
 });
 
+
+
+// @route   VOTE api/posts/vote:post_id
+// @desc    VOTE post
+// @access  Private
+router.post('/vote/:post_id',passport.authenticate('jwt',{ session: false }),(req,res)=>{
+    let vote = pick(req.body,["vote"]);
+    console.log("vote is ",vote)
+    const { errors, isValid } = voteInputsValidate(vote);
+    //upvote +1 true
+    //novote default false 
+    //downvote -1 false
+    if(!isValid){
+        console.log("Not valid vote ",errors);
+        res.status(400).json(errors);
+    }
+    else{
+                //voter must send Id of user whoes profile is to be liked
+        //voter id is avialablethrough passport
+        console.log("voting for ",req.params.post_id," by ",req.user.id);
+        Post.findById(req.params.post_id).then(post=>{
+            if(!post){
+                console.log("Trying to vote for non existing user");
+                res.status(404).json({status:false,noMatchingpost:'no matching Post found'});
+            }
+            else{
+                console.log("Voting for this post ",post);
+                let array = post.votedBy.map(oneVote => oneVote.user.toString());
+                console.log("Array",typeof array," ",array);
+                
+
+                //check if voter already voted...
+                // console.log(typeof req.params.post_id);
+                // console.log(post.votedBy.map(userVote =>{console.log(typeof userVote.user.toString(),userVote.user.toString());return userVote.user.toString()}));
+                let voterIndex = post.votedBy.map(userVote => userVote.user.toString())
+                                    .indexOf(req.user.id);
+                console.log(voterIndex);
+                if(voterIndex>=0){
+                    //voter already exist
+                    let updateVote = {
+                        user: req.user.id,//voter who req upvote
+                        vote:vote.vote
+                    };
+                    post.votedBy[voterIndex] = updateVote;
+                    post.save().then(()=>{
+                        res.json({vote:`${vote.vote?'Liked':'Disliked'}`,voteChanged:true})
+                    })
+                }
+                else{
+                    //new vote on post
+                    console.log("Vote type is",typeof vote);
+                    let newVote = {
+                        user: req.user.id,//voter who req upvote
+                        vote:vote.vote
+                    };
+                    post.votedBy.unshift(newVote);
+                    post.save().then(()=>{
+                        res.json({vote:`${vote.vote?'Liked':'Disliked'}`,newVoted:true})
+                    })
+                }
+
+
+
+            }
+        })
+    }
+    
+});
+
+
+
+
 // @route   DELETE api/posts/:id
 // @desc    Delete post
 // @access  Private
@@ -128,7 +204,7 @@ router.delete(
     '/:post_id',
     passport.authenticate('jwt', { session: false }),
     (req, res) => {
-      Profile.findOne({ user: req.user.id }).then(profile => {
+      post.findOne({ user: req.user.id }).then(profile => {
         Post.findById(req.params.post_id)
           .then(post => {
             // Check for post owner
@@ -144,7 +220,7 @@ router.delete(
           .catch(err => res.status(404).json({ postnotfound: 'No post found' }));
       });
     }
-  );
+);
 
 
 
@@ -157,7 +233,7 @@ router.post(
     '/comment/:post_id',
     passport.authenticate('jwt', { session: false }),
     (req, res) => {
-      const { errors, isValid } = validatePostInput(req.body);
+      const { errors, isValid } = commentInputsValidate(req.body);
   
       // Check Validation
       if (!isValid) {
@@ -169,8 +245,7 @@ router.post(
         .then(post => {
           const newComment = {
             text: req.body.text,
-            name: req.body.name,
-            avatar: req.body.avatar,
+            name: `${req.user.firstName} ${req.user.lastName}`,
             user: req.user.id
           };
   

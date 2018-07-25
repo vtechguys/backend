@@ -22,6 +22,16 @@ function postInputsValidate(input){
         errors.body = 'Body is required';
     }
     
+    if(!isEmpty(input.comment)){
+        if(!Validator.isLength(input.comment.text,{ min:2, max:150 })){
+            errors.body = 'Comment length of min 2 and max length 150';
+        }
+    }
+
+
+
+
+
     return{
         errors,
         isValid:isEmpty(errors)

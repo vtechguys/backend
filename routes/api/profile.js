@@ -329,7 +329,7 @@ router.post('/vote/:user_id',passport.authenticate('jwt',{ session: false }),(re
                     };
                     profile.votedBy[voterIndex] = updateVote;
                     profile.save().then(()=>{
-                        res.json({vote:`${vote?'Liked':'Disliked'}`,voteChanged:true})
+                        res.json({vote:`${vote.vote?'Liked':'Disliked'}`,voteChanged:true})
                     })
                 }
                 else{
@@ -341,7 +341,7 @@ router.post('/vote/:user_id',passport.authenticate('jwt',{ session: false }),(re
                     };
                     profile.votedBy.unshift(newVote);
                     profile.save().then(()=>{
-                        res.json({vote:`${vote?'Liked':'Disliked'}`,newVoted:true})
+                        res.json({vote:`${vote.vote?'Liked':'Disliked'}`,newVoted:true})
                     })
                 }
 
