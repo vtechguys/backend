@@ -19,13 +19,13 @@ const PostSchema = new Schema({
     },
     author:{
         type:String,
-        
+        required:true
     },
     date:{
         type:Date,
         default:Date.now
     },
-    commnets:[{
+    comments:[{
         
         user: {
             type: Schema.Types.ObjectId,
