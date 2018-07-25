@@ -47,7 +47,7 @@ app.use(bodyParser.json());
 //Matches every request from /api/user to users routes Imports
 app.use('/api/users',users);
 app.use('/api/profile',profile);
-app.use('/api/resume',posts);
+app.use('/api/posts',posts);
 
 
 //Db Config
